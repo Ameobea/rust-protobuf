@@ -29,13 +29,7 @@ pub enum ProtobufError {
     IoError(io::Error),
     WireError(WireError),
     Utf8(str::Utf8Error),
-    MessageNotInitialized { message: &'static str },
-}
-
-impl ProtobufError {
-    pub fn message_not_initialized(message: &'static str) -> ProtobufError {
-        ProtobufError::MessageNotInitialized { message: message }
-    }
+    MessageNotInitialized,
 }
 
 impl fmt::Display for ProtobufError {
@@ -64,7 +58,7 @@ impl Error for ProtobufError {
                 }
             }
             &ProtobufError::Utf8(ref e) => &e.description(),
-            &ProtobufError::MessageNotInitialized { .. } => "not all message fields set",
+            &ProtobufError::MessageNotInitialized => "not all message fields set",
         }
     }
 
@@ -73,7 +67,7 @@ impl Error for ProtobufError {
             &ProtobufError::IoError(ref e) => Some(e),
             &ProtobufError::Utf8(ref e) => Some(e),
             &ProtobufError::WireError(..) => None,
-            &ProtobufError::MessageNotInitialized { .. } => None,
+            &ProtobufError::MessageNotInitialized => None,
         }
     }
 }
@@ -97,10 +91,10 @@ impl From<ProtobufError> for io::Error {
             ProtobufError::WireError(e) => {
                 io::Error::new(io::ErrorKind::InvalidData, ProtobufError::WireError(e))
             }
-            ProtobufError::MessageNotInitialized { message: msg } => {
+            ProtobufError::MessageNotInitialized => {
                 io::Error::new(
                     io::ErrorKind::InvalidInput,
-                    ProtobufError::MessageNotInitialized { message: msg },
+                    ProtobufError::MessageNotInitialized,
                 )
             }
             e => io::Error::new(io::ErrorKind::Other, Box::new(e)),
